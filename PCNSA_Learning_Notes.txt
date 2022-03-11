@@ -282,3 +282,248 @@
 
 - ICMP application - all ICMP messages except echos (ping)
 - ping application - ICMP echo
+
+# NAT Policy
+
+- Enforces packet translations through rules
+  Source & destination zones (required), source/destination addresses, interface and more
+- Rule Processing
+  Top-down, first-match
+  
+# NAT & Security Policy
+
+- IP Addresses
+  NAT & Security Policy rules should always refer to the original IPs. i.e. pre-NAT
+- Zones
+  NAT Policy rules should refer to the orignal packet (pre-NAT)
+  Securtity Policy rules
+    Refer to the original packet for the source zone (pre-NAT)
+    Refer to the translated packet for the destination zone (post-NAT)
+    
+- Find the right zone for an IP
+  test routing fib-lookup
+
+# Working with NAT
+
+- Verification & Troubleshooting
+  CLI: show session, show running ippool, show system state | match nat
+  
+# Syslog
+
+- Syslog Configuration
+  Server Profile: Device > Server Profiles > Syslog
+  Log Forwarder: Object > Log Forwarding
+  Policy update - with created profile
+  System/Config Logs: Device > Log Settings
+  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			### Palo Alto Firewall Technologies ###
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# App-ID
+
+- Advanced traffic classification engine
+  Not dependent on regular protocl/port criteria
+
+- Identification Mechanisms
+  Application Signatures
+- Decryption (SSL/TLS, SSH)
+- Application & Protocol Decoders
+  Detect tunneled applications and look for protocol conformance
+- Heuristics
+
+# Application Database
+
+- Stores informations about all knwon applications & their properties
+  Objects > Applications
+
+# Unknown Applications
+
+- Unknown Application Handling
+  Dedicated policy rule for unknown traffic
+  App-ID request
+  App-ID development
+
+https://applipedia.paloaltonetworks.com/
+
+# Application Dependencies
+
+- PAN-OS correlates some applications with other(s)
+  e.g. if App1 depends on App2m using App1 in a rules is not sufficient
+  
+- Implicit Dependencies
+  Required dependent applications will be enabled automatically
+  
+- Explicit Dependencies
+  Required dependent applications have to be added manuallu
+  Rule "Applications" tab ("Depends On")
+  
+# Application Groups
+
+- A collection of applications defined within a single object
+  
+# Application Filters
+
+- Similar to Groups, but updated dynamically
+  New applications matching the filter criteria will be added automatically
+  Defined through application attributes: Category, Subcategory, Technology, Risk Factor, Characteristics
+  
+# Customer Applications
+
+- Created for better visibility & granular control
+  Stored in a separate databse
+  Not affected by App-ID updates
+
+# User-ID Overview
+
+- User-ID allows to identify users and enable identiy-based access
+  Granular per-user and/or per-group Security Policy rules
+  
+# User-ID Mappings
+
+- User-ID works by mapping IP addresses to usernames
+- Group Mappings
+  The firewall can collect group mapping information for simplified administration
+  LDAP servers only
+- Most mapping techniques involves using a User-Id Agent
+  Windows Agent
+    External, installed on domain servers
+    Saves CPU on the firewall's management plane
+  Integrated Agent
+    Built-in to the firewall
+    Reduces bandwidth usage
+    
+# Mapping Methods
+
+- Server Monitoring
+  Analysis of security event logs (login events)
+- Syslog
+  Analysis of received Syslog messages (login/logout events)
+- Port Mapping
+  For multi-user systems, such as Microsoft Terminal Server or Citrix
+- XFF Headers
+  For proxy servers supporting X-Forwarded-For (XFF) header
+- GlobalProtect
+  For GlobalProtect VPN endpoints
+- Authentication
+  An active mapping mechanism
+  Captive Portal authentication
+  
+# Captive Portal
+
+- A special web portal used to capture user's credentials
+
+# User-ID Configuration Overview
+
+- User-ID configuration requires multiple steps
+  Enable the engine for the right zone(s)
+  Map IP addresses to users
+  Create identity-based rule
+
+# Configuration - AD Integration
+
+- LDAP Profile
+  Device > Server Profiles > LDAP
+  BIND DN must include the domain name
+- Group Mappings
+  Device > User Identification > Group Mapping Settings
+  Verify LDAP connectivity under "Group Include List"
+  Verify with show user group name [list]
+
+# Configuration - Captive Portal
+
+- Captive interface
+  Management Profile (Network > Network Profiles > Interface Management)
+    Response Pages, User-ID
+  Service Routes (Device > Setup > Services)
+    LDAP, UID Agent
+- Authentication Profile(s)
+  Device > Authentication Profile
+    Type, User Domain, Server Profile, Allow List
+  Verify with test authentication
+- Portal Certificate
+  Device > Certificate Management > Certificates > Device Certificates > Generate
+    For self-signed make sure to chek "Certificate Authority"
+  Bind certificate to a SSL/TLS Service Profile
+    Device > Certificate Management > SSl/TLS Service Profile
+- Captive Portal
+  Device > User Identification > Captive Portal Settings
+    Authentication & SSL/TLS Profiles, Mode, Redirect Host
+    
+# Configuration - User-ID & Authentication
+
+- User-ID
+  Network > Zones
+    Enable User Identification
+    Trusted zones only
+- Authentication Policy
+  Policies > Authentication
+    Set users to "unknown"
+    Set action to "web-form"
+    
+# Configuration - Remaining Steps
+- Security Policy
+  Add identity-based rules "User"
+- Verification
+  Monitor > Traffic
+  Monitor > User-ID
+  show user ip-user-mapping
+  
+- Authentication Policy is processed before Security Policy
+
+# Security Profiles Overview
+
+- An additional set of inspection engines available to scan traffic
+  Configured under Objects > Security Profiles
+  Activated within a Security Policy "allow" rule"
+    Actions > Profile Settings
+
+# Wildfire Analysis
+
+- Forwards unknown files for WildFire analysis
+  Public, Private or Hybrid
+
+# Security Profile Groups
+
+- Logical "containers" for storing multiple Security Profiles
+  Simplify policy configuration
+  
+- Default Security Profile Group
+  A group named "default"
+
+# Zone Protection Overview
+
+- Defends the entire ingress zone against different types of attacks
+  Offers broad protection - not designed to protect a specific host
+  
+- Zone Protection applies to new sessions only
+  Existing connections bypass Protection Profiles
+  The zone is determined from the ingress interface
+  
+# Configuring Zone Protection
+
+- Create and apply protection profile
+  Network > Network Profiles > Zone Protection
+  Network > Zones > Zone Protection Profile
+  Verify with CLI show zone-protection
+  
+# DoS Protection Overview
+
+- Protects network against floods & resource-based attacks
+  Similar to Zone Protection, but more granular
+  Processed before Security Policy
+  Enforced on new sessions only
+  Resource-intensive
+  
+# Protection Profiles
+
+- DoS Protection rule logic depends on the configured Profile
+  Aggregate vs Classified
+  Aggregate Profile applies to the combined traffic (per device group)
+  Classified Profile applies to individual devices (per device)
+- Profiles can be combined per rule
+
+# Configuring DoS Protection
+
+- Protection Profiles: Objects > Security Profiles > DoS Protection
+- Protection Rules: Policies > DoS Protection
