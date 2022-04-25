@@ -4,4 +4,5 @@ Topics:
 
 - Introduction to Palo Alto Firewalls
 
+##### https://beacon.paloaltonetworks.com/student/catalog
 
